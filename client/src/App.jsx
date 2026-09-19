@@ -22,6 +22,7 @@ import { StudentDashboard } from './pages/student/StudentDashboard';
 import { StudentAttendance } from './pages/student/StudentAttendance';
 import { StudentMarks } from './pages/student/StudentMarks';
 import { StudentFees } from './pages/student/StudentFees';
+import { StudentTimetable } from './pages/student/StudentTimetable';
 
 import { NoticesPage } from './pages/common/NoticesPage';
 import { ProfilePage } from './pages/common/ProfilePage';
@@ -106,6 +107,10 @@ export function App() {
             <Route
               path="student/fees"
               element={<ProtectedRoute allowedRoles={['student']}><StudentFees /></ProtectedRoute>}
+            />
+            <Route
+              path="student/timetable"
+              element={<ProtectedRoute allowedRoles={['student', 'faculty', 'admin']}><StudentTimetable /></ProtectedRoute>}
             />
 
             {/* Common Routes (all roles) */}

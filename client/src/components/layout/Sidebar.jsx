@@ -7,6 +7,7 @@ import {
   GraduationCap,
   BookOpen,
   CalendarCheck,
+  Calendar,
   Award,
   CreditCard,
   Bell,
@@ -23,6 +24,7 @@ export const Sidebar = ({ onOpenAi }) => {
       case 'admin':
         return [
           { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+          { to: '/student/timetable', label: 'Class Timetables', icon: Calendar },
           { to: '/admin/students', label: 'Manage Students', icon: Users },
           { to: '/admin/faculty', label: 'Manage Faculty', icon: GraduationCap },
           { to: '/admin/academics', label: 'Courses & Subjects', icon: BookOpen },
@@ -33,6 +35,7 @@ export const Sidebar = ({ onOpenAi }) => {
       case 'faculty':
         return [
           { to: '/faculty/dashboard', label: 'Faculty Portal', icon: LayoutDashboard },
+          { to: '/student/timetable', label: 'Master Timetable', icon: Calendar },
           { to: '/faculty/students', label: 'Students Directory', icon: Users },
           { to: '/faculty/attendance', label: 'Mark Attendance', icon: CalendarCheck },
           { to: '/faculty/marks', label: 'Upload Marks', icon: Award },
@@ -42,6 +45,7 @@ export const Sidebar = ({ onOpenAi }) => {
       case 'student':
         return [
           { to: '/student/dashboard', label: 'Student Portal', icon: LayoutDashboard },
+          { to: '/student/timetable', label: 'Class Timetable', icon: Calendar },
           { to: '/student/attendance', label: 'My Attendance', icon: CalendarCheck },
           { to: '/student/marks', label: 'Grades & Marksheet', icon: Award },
           { to: '/student/fees', label: 'Fee Ledger & Receipts', icon: CreditCard },

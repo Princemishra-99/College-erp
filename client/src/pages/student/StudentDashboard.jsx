@@ -457,6 +457,13 @@ export const StudentDashboard = () => {
             );
           })}
         </div>
+
+        <div style={{ marginTop: '18px', paddingTop: '14px', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'flex-end' }}>
+          <Link to="/student/timetable" style={{ fontSize: '0.84rem', color: '#4f46e5', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span>Open Complete Week Timetable & Print View</span>
+            <ArrowRight size={14} />
+          </Link>
+        </div>
       </div>
 
       {/* Recent Notices Feed */}

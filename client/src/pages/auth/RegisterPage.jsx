@@ -5,7 +5,8 @@ import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 import {
   GraduationCap, User, Mail, Lock, Phone, BookOpen,
-  Eye, EyeOff, ArrowLeft, CheckCircle, RefreshCw, ShieldCheck
+  Eye, EyeOff, ArrowLeft, CheckCircle, RefreshCw, ShieldCheck,
+  RotateCcw, KeyRound, Copy
 } from 'lucide-react';
 
 const DEPARTMENTS = [
@@ -24,6 +25,28 @@ const DESIGNATIONS = [
   'Lecturer',
 ];
 
+const initialFormData = {
+  name: '',
+  email: '',
+  password: '',
+  phone: '',
+  department: 'Computer Science & Engg',
+  // Student
+  enrollmentNo: '',
+  semester: '1',
+  section: 'A',
+  guardianName: '',
+  guardianPhone: '',
+  address: '',
+  gender: 'Male',
+  batchYear: '2023-2027',
+  // Faculty
+  employeeId: '',
+  designation: 'Assistant Professor',
+  qualification: '',
+  experienceYears: '0',
+};
+
 export const RegisterPage = () => {
   const navigate = useNavigate();
   const { login: authLogin } = useAuth();
@@ -34,31 +57,29 @@ export const RegisterPage = () => {
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [otpTimer, setOtpTimer] = useState(0);
-  const [devOtp, setDevOtp] = useState(''); // shown only in dev mode
+  const [devOtp, setDevOtp] = useState(''); // shown on page and received via API
 
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    phone: '',
-    department: 'Computer Science & Engg',
-    // Student
-    enrollmentNo: '',
-    semester: '1',
-    section: 'A',
-    guardianName: '',
-    guardianPhone: '',
-    address: '',
-    gender: 'Male',
-    batchYear: '2023-2027',
-    // Faculty
-    employeeId: '',
-    designation: 'Assistant Professor',
-    qualification: '',
-    experienceYears: '0',
-  });
+  const [formData, setFormData] = useState({ ...initialFormData });
 
   const [otp, setOtp] = useState('');
+
+  // Handle Role Switching - Clears/resets all form fields cleanly
+  const handleRoleChange = (newRole) => {
+    if (newRole === role) return;
+    setRole(newRole);
+    setFormData({
+      ...initialFormData,
+      department: newRole === 'faculty' ? DEPARTMENTS[0] : 'Computer Science & Engg',
+    });
+    setOtp('');
+    setDevOtp('');
+  };
+
+  // Manual Clear/Reset Form
+  const handleResetForm = () => {
+    setFormData({ ...initialFormData });
+    toast.success('Form cleared!');
+  };
 
   // OTP countdown timer
   useEffect(() => {
@@ -85,10 +106,10 @@ export const RegisterPage = () => {
     try {
       const res = await api.post('/auth/send-register-otp', { email: formData.email });
       if (res.data.success) {
-        toast.success(`OTP sent to ${formData.email}`);
+        toast.success(res.data.message || `OTP sent to ${formData.email}`);
         if (res.data.devOtp) {
           setDevOtp(res.data.devOtp);
-          toast(`🔧 Dev Mode OTP: ${res.data.devOtp}`, {
+          toast(`🔑 Verification OTP: ${res.data.devOtp}`, {
             icon: '🔑',
             style: { background: '#1e1b4b', color: '#c7d2fe', fontWeight: 700 },
             duration: 30000,
@@ -202,10 +223,32 @@ export const RegisterPage = () => {
             <form onSubmit={handleSendOTP}>
               {/* Role Selector */}
               <div style={{ marginBottom: '20px' }}>
-                <label style={labelStyle}>I am a *</label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <label style={{ ...labelStyle, marginBottom: 0 }}>I am a *</label>
+                  <button
+                    type="button"
+                    onClick={handleResetForm}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#6366f1',
+                      cursor: 'pointer',
+                      fontSize: '0.78rem',
+                      fontWeight: 600,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '2px 6px',
+                      borderRadius: '6px',
+                    }}
+                    title="Clear all fields"
+                  >
+                    <RotateCcw size={12} /> Clear Form
+                  </button>
+                </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                   {['student', 'faculty'].map((r) => (
-                    <button key={r} type="button" onClick={() => setRole(r)} style={{
+                    <button key={r} type="button" onClick={() => handleRoleChange(r)} style={{
                       padding: '12px', borderRadius: '10px', cursor: 'pointer', fontWeight: 700,
                       fontSize: '0.9rem', textTransform: 'capitalize', transition: 'all 0.2s',
                       border: role === r ? '2px solid #4f46e5' : '2px solid #e2e8f0',
@@ -327,26 +370,66 @@ export const RegisterPage = () => {
 
           {step === 'otp' && (
             <form onSubmit={handleVerifyAndRegister}>
-              {/* Dev OTP hint banner */}
+              {/* OTP banner (Sent to Email & displayed on Screen) */}
               {devOtp && (
                 <div style={{
-                  padding: '14px 16px', borderRadius: '12px', marginBottom: '20px',
-                  background: 'linear-gradient(135deg, #1e1b4b, #312e81)', border: '1.5px solid #4f46e5',
+                  padding: '16px 18px', borderRadius: '14px', marginBottom: '20px',
+                  background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)',
+                  border: '1.5px solid #6366f1',
+                  boxShadow: '0 8px 24px rgba(79, 70, 229, 0.25)',
+                  textAlign: 'center',
                 }}>
-                  <div style={{ color: '#c7d2fe', fontSize: '0.8rem', fontWeight: 700, marginBottom: '4px' }}>
-                    🔧 Dev Mode – OTP delivered to server console:
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', color: '#c7d2fe', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>
+                    <KeyRound size={16} color="#a5b4fc" />
+                    <span>6-Digit Verification OTP (Sent to Email & Screen):</span>
                   </div>
-                  <div style={{ color: '#a5b4fc', fontSize: '1.8rem', fontWeight: 900, letterSpacing: '0.3em', fontFamily: 'monospace' }}>
+                  <div style={{ color: '#ffffff', fontSize: '2.3rem', fontWeight: 900, letterSpacing: '0.35em', fontFamily: 'monospace', textShadow: '0 2px 10px rgba(0,0,0,0.5)', margin: '4px 0 12px 0' }}>
                     {devOtp}
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOtp(devOtp);
+                        toast.success('OTP auto-filled into form!');
+                      }}
+                      style={{
+                        padding: '7px 16px', borderRadius: '8px', border: '1px solid #818cf8',
+                        background: 'linear-gradient(135deg, #4f46e5, #6366f1)', color: '#ffffff',
+                        fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer',
+                        display: 'inline-flex', alignItems: 'center', gap: '6px',
+                        boxShadow: '0 2px 8px rgba(79,70,229,0.3)',
+                      }}
+                    >
+                      <CheckCircle size={15} /> Auto-Fill OTP
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(devOtp);
+                        toast.success('OTP copied to clipboard!');
+                      }}
+                      style={{
+                        padding: '7px 14px', borderRadius: '8px', border: '1px solid #475569',
+                        background: 'rgba(255, 255, 255, 0.12)', color: '#cbd5e1',
+                        fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer',
+                        display: 'inline-flex', alignItems: 'center', gap: '6px',
+                      }}
+                    >
+                      <Copy size={15} /> Copy
+                    </button>
                   </div>
                 </div>
               )}
 
-              <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: '10px' }}>📧</div>
-                <h3 style={{ fontWeight: 800, color: '#0f172a', margin: '0 0 6px 0' }}>Check your Email</h3>
+              <div style={{ textAlign: 'center', marginBottom: '22px' }}>
+                <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>📧</div>
+                <h3 style={{ fontWeight: 800, color: '#0f172a', margin: '0 0 6px 0', fontSize: '1.2rem' }}>Check your Email</h3>
                 <p style={{ color: '#64748b', fontSize: '0.88rem', margin: 0 }}>
                   We sent a 6-digit OTP to <strong>{formData.email}</strong>
+                </p>
+                <p style={{ color: '#94a3b8', fontSize: '0.78rem', margin: '4px 0 0 0' }}>
+                  (Also provided above for instant verification)
                 </p>
               </div>
 

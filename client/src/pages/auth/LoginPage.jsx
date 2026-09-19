@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { GraduationCap, Lock, Mail, ArrowRight, ShieldCheck, Sparkles, Eye, EyeOff, KeyRound, RefreshCw, CheckCircle, X } from 'lucide-react';
+import { GraduationCap, Lock, Mail, ArrowRight, ShieldCheck, Sparkles, Eye, EyeOff, KeyRound, RefreshCw, CheckCircle, X, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../services/api';
 
@@ -102,13 +102,53 @@ const ForgotPasswordModal = ({ onClose }) => {
         {step === 'otp' && (
           <form onSubmit={handleResetPassword}>
             {devOtp && (
-              <div style={{ background: '#1e1b4b', borderRadius: '10px', padding: '12px', marginBottom: '16px', textAlign: 'center' }}>
-                <div style={{ color: '#94a3b8', fontSize: '0.75rem', marginBottom: '4px' }}>🔧 Dev Mode OTP:</div>
-                <div style={{ color: '#a5b4fc', fontSize: '1.6rem', fontWeight: 900, letterSpacing: '0.3em', fontFamily: 'monospace' }}>{devOtp}</div>
+              <div style={{
+                background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)',
+                border: '1.5px solid #6366f1',
+                borderRadius: '12px', padding: '14px', marginBottom: '16px', textAlign: 'center',
+                boxShadow: '0 4px 16px rgba(79, 70, 229, 0.25)',
+              }}>
+                <div style={{ color: '#c7d2fe', fontSize: '0.8rem', fontWeight: 700, marginBottom: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                  <KeyRound size={15} color="#a5b4fc" />
+                  <span>6-Digit OTP (Email & Screen):</span>
+                </div>
+                <div style={{ color: '#ffffff', fontSize: '2rem', fontWeight: 900, letterSpacing: '0.3em', fontFamily: 'monospace', margin: '4px 0 10px 0' }}>{devOtp}</div>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOtp(devOtp);
+                      toast.success('OTP auto-filled!');
+                    }}
+                    style={{
+                      padding: '5px 12px', borderRadius: '6px', border: '1px solid #818cf8',
+                      background: 'linear-gradient(135deg, #4f46e5, #6366f1)', color: '#ffffff',
+                      fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer',
+                      display: 'inline-flex', alignItems: 'center', gap: '5px',
+                    }}
+                  >
+                    <CheckCircle size={13} /> Auto-Fill OTP
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(devOtp);
+                      toast.success('OTP copied!');
+                    }}
+                    style={{
+                      padding: '5px 10px', borderRadius: '6px', border: '1px solid #475569',
+                      background: 'rgba(255, 255, 255, 0.1)', color: '#cbd5e1',
+                      fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer',
+                      display: 'inline-flex', alignItems: 'center', gap: '5px',
+                    }}
+                  >
+                    <Copy size={13} /> Copy
+                  </button>
+                </div>
               </div>
             )}
             <p style={{ color: '#64748b', fontSize: '0.83rem', textAlign: 'center', marginBottom: '16px' }}>
-              OTP sent to <strong>{email}</strong>
+              OTP sent to <strong>{email}</strong> (also shown above)
             </p>
             <div style={{ marginBottom: '12px' }}>
               <label style={{ fontSize: '0.82rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '5px' }}>6-Digit OTP *</label>

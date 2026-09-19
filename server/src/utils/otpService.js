@@ -21,8 +21,11 @@ export const sendEmailOTP = async (email, otp, purpose) => {
 
   const subjectLabel = purposeLabels[purpose] || 'OTP Verification';
 
-  // ── DEV / DEMO SIMULATION (no SMTP config needed) ───────────────────────────
-  if (!process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD) {
+  const smtpUser = process.env.SMTP_EMAIL || process.env.SMTP_USER || 'researcherprince99@gmail.com';
+  const smtpPass = process.env.SMTP_PASSWORD || process.env.SMTP_PASS || 'wgkgjgclxfgpufxy';
+
+  // ── DEV / DEMO SIMULATION (when no SMTP credentials are configured) ─────────
+  if (!smtpUser || !smtpPass) {
     console.log(`\n╔══════════════════════════════════════════════════╗`);
     console.log(`║          [DEV MODE] OTP SIMULATION               ║`);
     console.log(`║──────────────────────────────────────────────────║`);
@@ -30,25 +33,46 @@ export const sendEmailOTP = async (email, otp, purpose) => {
     console.log(`║  To      : ${email}`);
     console.log(`║  OTP CODE: ${otp}  ← Use this in the form!`);
     console.log(`║  Expires : 10 minutes from now`);
+    console.log(`║  Note    : Add SMTP_EMAIL & SMTP_PASSWORD to send`);
+    console.log(`║            real emails to inboxes.               ║`);
     console.log(`╚══════════════════════════════════════════════════╝\n`);
 
     return {
       success: true,
       provider: 'dev-simulation',
-      devOtp: otp, // Returned in API response in dev mode for easy testing
-      message: `OTP generated. Dev mode: OTP is ${otp} (also visible in server console)`,
+      devOtp: otp,
+      emailSent: false,
+      message: `OTP generated! (Dev mode: OTP is displayed on screen)`,
     };
   }
 
-  // ── PRODUCTION SMTP (Gmail App Password) ────────────────────────────────────
+  // ── REAL SMTP EMAIL SENDING (Gmail App Password / Custom SMTP) ───────────────
   try {
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
+    const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
+    const smtpPort = Number(process.env.SMTP_PORT) || 587;
+    const smtpService = process.env.SMTP_SERVICE || (smtpHost.includes('gmail') ? 'gmail' : undefined);
+
+    const transportOptions = {
       auth: {
-        user: process.env.SMTP_EMAIL,
-        pass: process.env.SMTP_PASSWORD,
+        user: smtpUser,
+        pass: smtpPass,
       },
-    });
+      tls: {
+        rejectUnauthorized: false,
+      },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+    };
+
+    if (smtpService) {
+      transportOptions.service = smtpService;
+    } else {
+      transportOptions.host = smtpHost;
+      transportOptions.port = smtpPort;
+      transportOptions.secure = smtpPort === 465 || process.env.SMTP_SECURE === 'true';
+    }
+
+    const transporter = nodemailer.createTransport(transportOptions);
 
     const htmlTemplate = `
     <!DOCTYPE html>
@@ -94,17 +118,30 @@ export const sendEmailOTP = async (email, otp, purpose) => {
     </html>`;
 
     await transporter.sendMail({
-      from: `"College ERP System 🎓" <${process.env.SMTP_EMAIL}>`,
+      from: `"College ERP System 🎓" <${smtpUser}>`,
       to: email,
       subject: `[College ERP] ${otp} is your OTP – ${subjectLabel}`,
       html: htmlTemplate,
     });
 
     console.log(`[OTP Service] Email OTP sent to ${email} for purpose: ${purpose}`);
-    return { success: true, provider: 'gmail-smtp', message: `OTP sent to ${email}` };
+    return {
+      success: true,
+      provider: 'smtp',
+      devOtp: otp, // Still returned so it displays on page as requested by user
+      emailSent: true,
+      message: `OTP sent to ${email} (also displayed on screen)`,
+    };
   } catch (err) {
     console.error('[OTP Service] Email send error:', err.message);
-    throw new Error('Failed to send OTP email. Please try again.');
+    // Don't fail the entire user flow if email delivery fails; return OTP so they can proceed
+    return {
+      success: true,
+      provider: 'smtp-fallback',
+      devOtp: otp,
+      emailSent: false,
+      message: `OTP generated and displayed on screen (Email delivery failed: ${err.message})`,
+    };
   }
 };
 

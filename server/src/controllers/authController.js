@@ -162,8 +162,8 @@ export const sendRegisterOTP = async (req, res) => {
     return res.json({
       success: true,
       message: result.message,
-      // Only include OTP in dev mode for easy testing/viva
-      ...(result.devOtp ? { devOtp: result.devOtp, devNote: 'Dev mode: Use this OTP to complete registration' } : {}),
+      emailSent: result.emailSent,
+      ...(result.devOtp ? { devOtp: result.devOtp, devNote: 'OTP code for verification' } : {}),
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -328,7 +328,8 @@ export const sendResetOTP = async (req, res) => {
     return res.json({
       success: true,
       message: result.message,
-      ...(result.devOtp ? { devOtp: result.devOtp, devNote: 'Dev mode: Use this OTP to reset password' } : {}),
+      emailSent: result.emailSent,
+      ...(result.devOtp ? { devOtp: result.devOtp, devNote: 'OTP code for reset password' } : {}),
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

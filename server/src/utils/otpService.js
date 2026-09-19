@@ -91,7 +91,42 @@ export const sendEmailOTP = async (email, otp, purpose) => {
     </body>
     </html>`;
 
-    // ── RESEND HTTP REST API (Works over HTTPS Port 443 – Never blocked on Render) ──
+    // ── 1. BREVO HTTP REST API (Primary: Works over HTTPS Port 443 – Sends to ANY email recipient!) ──
+    const brevoKey = process.env.BREVO_API_KEY || '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';
+    if (brevoKey) {
+      try {
+        const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          headers: {
+            'api-key': brevoKey,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            sender: { name: 'College ERP System 🎓', email: 'researcherprince99@gmail.com' },
+            to: [{ email }],
+            subject: `[College ERP] ${otp} is your OTP – ${subjectLabel}`,
+            htmlContent: htmlTemplate,
+          }),
+        });
+        const brevoData = await brevoRes.json();
+        if (brevoRes.ok) {
+          console.log(`[OTP Service] Email successfully sent via Brevo API to ${email} (MessageId: ${brevoData.messageId})`);
+          return {
+            success: true,
+            provider: 'brevo-api',
+            devOtp: otp,
+            emailSent: true,
+            message: `OTP sent to ${email} (also displayed on screen)`,
+          };
+        } else {
+          console.warn('[OTP Service] Brevo API non-200 response:', brevoData);
+        }
+      } catch (err) {
+        console.warn('[OTP Service] Brevo API error, trying next provider:', err.message);
+      }
+    }
+
+    // ── 2. RESEND HTTP REST API (Secondary: HTTPS Port 443) ───────────────────
     const resendKey = process.env.RESEND_API_KEY || 're_2kE4RGqG_AtmYmLRUYR2e1WvbwYhzsBXd';
     if (resendKey) {
       try {
@@ -118,41 +153,11 @@ export const sendEmailOTP = async (email, otp, purpose) => {
             emailSent: true,
             message: `OTP sent to ${email} (also displayed on screen)`,
           };
+        } else {
+          console.warn('[OTP Service] Resend API non-200 response:', resendData);
         }
       } catch (err) {
         console.warn('[OTP Service] Resend API failed, falling back to SMTP:', err.message);
-      }
-    }
-
-    // ── BREVO HTTP REST API (Works over HTTPS Port 443 – Never blocked on Render) ──
-    const brevoKey = process.env.BREVO_API_KEY;
-    if (brevoKey) {
-      try {
-        const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
-          method: 'POST',
-          headers: {
-            'api-key': brevoKey,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            sender: { name: 'College ERP System', email: smtpUser },
-            to: [{ email }],
-            subject: `[College ERP] ${otp} is your OTP – ${subjectLabel}`,
-            htmlContent: htmlTemplate,
-          }),
-        });
-        if (brevoRes.ok) {
-          console.log(`[OTP Service] Email sent via Brevo API to ${email}`);
-          return {
-            success: true,
-            provider: 'brevo-api',
-            devOtp: otp,
-            emailSent: true,
-            message: `OTP sent to ${email} (also displayed on screen)`,
-          };
-        }
-      } catch (err) {
-        console.warn('[OTP Service] Brevo API failed, falling back to SMTP:', err.message);
       }
     }
 

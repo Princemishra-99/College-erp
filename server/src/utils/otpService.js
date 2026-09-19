@@ -92,7 +92,7 @@ export const sendEmailOTP = async (email, otp, purpose) => {
     </html>`;
 
     // ── RESEND HTTP REST API (Works over HTTPS Port 443 – Never blocked on Render) ──
-    const resendKey = process.env.RESEND_API_KEY;
+    const resendKey = process.env.RESEND_API_KEY || 're_2kE4RGqG_AtmYmLRUYR2e1WvbwYhzsBXd';
     if (resendKey) {
       try {
         const resendRes = await fetch('https://api.resend.com/emails', {

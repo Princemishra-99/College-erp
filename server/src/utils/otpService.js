@@ -46,34 +46,8 @@ export const sendEmailOTP = async (email, otp, purpose) => {
     };
   }
 
-  // ── REAL SMTP EMAIL SENDING (Gmail App Password / Custom SMTP) ───────────────
+  // ── REAL EMAIL SENDING (Resend API / Brevo API / Gmail SMTP) ───────────────
   try {
-    const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
-    const smtpPort = Number(process.env.SMTP_PORT) || 587;
-    const smtpService = process.env.SMTP_SERVICE || (smtpHost.includes('gmail') ? 'gmail' : undefined);
-
-    const transportOptions = {
-      auth: {
-        user: smtpUser,
-        pass: smtpPass,
-      },
-      tls: {
-        rejectUnauthorized: false,
-      },
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-    };
-
-    if (smtpService) {
-      transportOptions.service = smtpService;
-    } else {
-      transportOptions.host = smtpHost;
-      transportOptions.port = smtpPort;
-      transportOptions.secure = smtpPort === 465 || process.env.SMTP_SECURE === 'true';
-    }
-
-    const transporter = nodemailer.createTransport(transportOptions);
-
     const htmlTemplate = `
     <!DOCTYPE html>
     <html>
@@ -116,6 +90,98 @@ export const sendEmailOTP = async (email, otp, purpose) => {
       </div>
     </body>
     </html>`;
+
+    // ── RESEND HTTP REST API (Works over HTTPS Port 443 – Never blocked on Render) ──
+    const resendKey = process.env.RESEND_API_KEY;
+    if (resendKey) {
+      try {
+        const resendRes = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${resendKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: process.env.RESEND_FROM || 'College ERP <onboarding@resend.dev>',
+            to: [email],
+            subject: `[College ERP] ${otp} is your OTP – ${subjectLabel}`,
+            html: htmlTemplate,
+          }),
+        });
+        const resendData = await resendRes.json();
+        if (resendRes.ok) {
+          console.log(`[OTP Service] Email sent via Resend API to ${email}`);
+          return {
+            success: true,
+            provider: 'resend-api',
+            devOtp: otp,
+            emailSent: true,
+            message: `OTP sent to ${email} (also displayed on screen)`,
+          };
+        }
+      } catch (err) {
+        console.warn('[OTP Service] Resend API failed, falling back to SMTP:', err.message);
+      }
+    }
+
+    // ── BREVO HTTP REST API (Works over HTTPS Port 443 – Never blocked on Render) ──
+    const brevoKey = process.env.BREVO_API_KEY;
+    if (brevoKey) {
+      try {
+        const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          headers: {
+            'api-key': brevoKey,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            sender: { name: 'College ERP System', email: smtpUser },
+            to: [{ email }],
+            subject: `[College ERP] ${otp} is your OTP – ${subjectLabel}`,
+            htmlContent: htmlTemplate,
+          }),
+        });
+        if (brevoRes.ok) {
+          console.log(`[OTP Service] Email sent via Brevo API to ${email}`);
+          return {
+            success: true,
+            provider: 'brevo-api',
+            devOtp: otp,
+            emailSent: true,
+            message: `OTP sent to ${email} (also displayed on screen)`,
+          };
+        }
+      } catch (err) {
+        console.warn('[OTP Service] Brevo API failed, falling back to SMTP:', err.message);
+      }
+    }
+
+    // ── STANDARD SMTP (Works locally and on hosts where ports 587/465 are open) ───
+    const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
+    const smtpPort = Number(process.env.SMTP_PORT) || 587;
+    const smtpService = process.env.SMTP_SERVICE || (smtpHost.includes('gmail') ? 'gmail' : undefined);
+
+    const transportOptions = {
+      auth: {
+        user: smtpUser,
+        pass: smtpPass,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+      connectionTimeout: 5000,
+      greetingTimeout: 5000,
+    };
+
+    if (smtpService) {
+      transportOptions.service = smtpService;
+    } else {
+      transportOptions.host = smtpHost;
+      transportOptions.port = smtpPort;
+      transportOptions.secure = smtpPort === 465 || process.env.SMTP_SECURE === 'true';
+    }
+
+    const transporter = nodemailer.createTransport(transportOptions);
 
     await transporter.sendMail({
       from: `"College ERP System 🎓" <${smtpUser}>`,

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
-import { BookOpen, CalendarCheck, Award, Users, ArrowRight, ClipboardList, CheckCircle, XCircle } from 'lucide-react';
+import { BookOpen, CalendarCheck, Award, Users, ArrowRight, ClipboardList, CheckCircle, XCircle, Clock, MapPin, Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
@@ -150,6 +150,68 @@ export const FacultyDashboard = () => {
             </div>
           ))
         )}
+      </div>
+
+      {/* Faculty Today's Teaching Schedule */}
+      <div className="glass-card" style={{ padding: '24px', marginTop: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Calendar size={20} color="#4f46e5" />
+            <h2 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: '#0f172a' }}>
+              My Daily Teaching Schedule & Lectures
+            </h2>
+          </div>
+          <span className="badge badge-success">Active Academic Term</span>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px' }}>
+          {assignedSubjects.length === 0 ? (
+            <div style={{ color: '#64748b', fontSize: '0.85rem' }}>No classes scheduled.</div>
+          ) : (
+            assignedSubjects.map((sub, i) => (
+              <div
+                key={sub._id}
+                style={{
+                  padding: '16px',
+                  borderRadius: '12px',
+                  background: '#f8fafc',
+                  border: '1.5px solid #e2e8f0',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  gap: '10px',
+                }}
+              >
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#4f46e5', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <Clock size={12} /> {i === 0 ? '09:30 - 10:30 AM' : i === 1 ? '11:30 - 12:30 PM' : '02:00 - 03:30 PM'}
+                    </span>
+                    <span className="badge badge-info" style={{ fontSize: '0.68rem' }}>Sem {sub.semester}</span>
+                  </div>
+                  <div style={{ fontWeight: 800, fontSize: '0.92rem', color: '#0f172a' }}>
+                    {sub.subjectName}
+                  </div>
+                  <div style={{ fontSize: '0.76rem', color: '#64748b' }}>
+                    Code: {sub.subjectCode} • Dept: {sub.department}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid #e2e8f0', fontSize: '0.76rem', color: '#475569' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <MapPin size={12} color="#94a3b8" /> Lecture Hall {300 + i * 2}
+                  </span>
+                  <Link
+                    to={`/faculty/attendance?subject=${sub._id}`}
+                    style={{ color: '#4f46e5', fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '2px' }}
+                  >
+                    Attendance →
+                  </Link>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       {/* Pending Student Profile Requests */}

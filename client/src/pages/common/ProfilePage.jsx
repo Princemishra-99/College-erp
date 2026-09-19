@@ -57,6 +57,20 @@ export const ProfilePage = () => {
 
   const handleSubmitRequest = async (e) => {
     e.preventDefault();
+    if (requestForm.phone) {
+      const cleanPhone = requestForm.phone.trim().replace(/^(\+91|0)/, '');
+      if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+        toast.error('Please enter a valid 10-digit student mobile number (starting with 6-9)');
+        return;
+      }
+    }
+    if (requestForm.guardianPhone) {
+      const cleanGPhone = requestForm.guardianPhone.trim().replace(/^(\+91|0)/, '');
+      if (!/^[6-9]\d{9}$/.test(cleanGPhone)) {
+        toast.error('Please enter a valid 10-digit guardian mobile number (starting with 6-9)');
+        return;
+      }
+    }
     if (!requestForm.reason || requestForm.reason.trim().length < 5) {
       toast.error('Please provide a valid reason (min 5 characters)');
       return;

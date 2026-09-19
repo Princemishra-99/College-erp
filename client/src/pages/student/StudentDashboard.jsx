@@ -1,8 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
-import { CalendarCheck, Award, CreditCard, AlertTriangle, CheckCircle2, Sparkles, ArrowRight, Bell } from 'lucide-react';
+import { CalendarCheck, Award, CreditCard, AlertTriangle, CheckCircle2, Sparkles, ArrowRight, Bell, Clock, MapPin, Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
+
+const WEEKDAY_SCHEDULE = {
+  Monday: [
+    { time: '09:30 - 10:30 AM', code: 'CS401', subject: 'Data Structures & Algorithms', room: 'Room 302', faculty: 'Dr. Rahul Sharma', type: 'Lecture' },
+    { time: '10:30 - 11:30 AM', code: 'CS402', subject: 'Database Management Systems', room: 'Room 204', faculty: 'Prof. Ananya Verma', type: 'Lecture' },
+    { time: '11:30 - 12:30 PM', code: 'CS403', subject: 'Operating Systems', room: 'Room 108', faculty: 'Dr. K. P. Singh', type: 'Lecture' },
+    { time: '12:30 - 01:30 PM', code: 'BREAK', subject: '🥪 Lunch Break & Campus Commons', room: 'Cafeteria', faculty: 'Campus', type: 'Break' },
+    { time: '01:30 - 03:30 PM', code: 'CS404L', subject: 'Computer Networks Lab', room: 'Software Lab 3', faculty: 'Prof. S. Gupta', type: 'Practical' },
+  ],
+  Tuesday: [
+    { time: '09:30 - 10:30 AM', code: 'CS403', subject: 'Operating Systems', room: 'Room 108', faculty: 'Dr. K. P. Singh', type: 'Lecture' },
+    { time: '10:30 - 11:30 AM', code: 'CS401', subject: 'Data Structures & Algorithms', room: 'Room 302', faculty: 'Dr. Rahul Sharma', type: 'Lecture' },
+    { time: '11:30 - 12:30 PM', code: 'CS405', subject: 'Discrete Mathematics', room: 'Room 201', faculty: 'Prof. R. C. Mathur', type: 'Lecture' },
+    { time: '12:30 - 01:30 PM', code: 'BREAK', subject: '🥪 Lunch Break', room: 'Cafeteria', faculty: 'Campus', type: 'Break' },
+    { time: '01:30 - 03:30 PM', code: 'CS402L', subject: 'DBMS MySQL Lab', room: 'Database Lab 2', faculty: 'Prof. Ananya Verma', type: 'Practical' },
+  ],
+  Wednesday: [
+    { time: '09:30 - 10:30 AM', code: 'CS402', subject: 'Database Management Systems', room: 'Room 204', faculty: 'Prof. Ananya Verma', type: 'Lecture' },
+    { time: '10:30 - 11:30 AM', code: 'CS404', subject: 'Computer Networks', room: 'Room 305', faculty: 'Prof. S. Gupta', type: 'Lecture' },
+    { time: '11:30 - 12:30 PM', code: 'AI401', subject: 'Sarvam Indic AI & NLP Seminar', room: 'Auditorium B', faculty: 'Dr. Rahul Sharma', type: 'Seminar' },
+    { time: '12:30 - 01:30 PM', code: 'BREAK', subject: '🥪 Lunch Break', room: 'Cafeteria', faculty: 'Campus', type: 'Break' },
+    { time: '01:30 - 03:30 PM', code: 'CS406', subject: 'Web Technologies (MERN Stack)', room: 'Innovation Lab', faculty: 'Dr. P. Mishra', type: 'Practical' },
+  ],
+  Thursday: [
+    { time: '09:30 - 10:30 AM', code: 'CS404', subject: 'Computer Networks', room: 'Room 305', faculty: 'Prof. S. Gupta', type: 'Lecture' },
+    { time: '10:30 - 11:30 AM', code: 'CS403', subject: 'Operating Systems', room: 'Room 108', faculty: 'Dr. K. P. Singh', type: 'Lecture' },
+    { time: '11:30 - 12:30 PM', code: 'CS401', subject: 'Data Structures & Algorithms', room: 'Room 302', faculty: 'Dr. Rahul Sharma', type: 'Tutorial' },
+    { time: '12:30 - 01:30 PM', code: 'BREAK', subject: '🥪 Lunch Break', room: 'Cafeteria', faculty: 'Campus', type: 'Break' },
+    { time: '01:30 - 03:30 PM', code: 'LIB', subject: 'Digital Library & Research Hours', room: 'Central Library', faculty: 'Chief Librarian', type: 'Library' },
+  ],
+  Friday: [
+    { time: '09:30 - 10:30 AM', code: 'CS405', subject: 'Discrete Mathematics', room: 'Room 201', faculty: 'Prof. R. C. Mathur', type: 'Lecture' },
+    { time: '10:30 - 11:30 AM', code: 'CS402', subject: 'Database Management Systems', room: 'Room 204', faculty: 'Prof. Ananya Verma', type: 'Lecture' },
+    { time: '11:30 - 12:30 PM', code: 'CS406', subject: 'MERN Full-Stack Development', room: 'Room 302', faculty: 'Dr. P. Mishra', type: 'Lecture' },
+    { time: '12:30 - 01:30 PM', code: 'BREAK', subject: '🥪 Lunch Break', room: 'Cafeteria', faculty: 'Campus', type: 'Break' },
+    { time: '01:30 - 03:30 PM', code: 'PROJ', subject: 'Major Project Evaluation & Mentoring', room: 'Seminar Hall', faculty: 'HOD & Faculty Panel', type: 'Project' },
+  ],
+};
 
 export const StudentDashboard = () => {
   const { user } = useAuth();
@@ -12,6 +50,12 @@ export const StudentDashboard = () => {
   const [marksData, setMarksData] = useState([]);
   const [recentNotices, setRecentNotices] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Timetable State
+  const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  const todayIndex = new Date().getDay();
+  const todayName = daysOfWeek[todayIndex - 1] || 'Monday';
+  const [activeDay, setActiveDay] = useState(todayName);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -299,6 +343,119 @@ export const StudentDashboard = () => {
             <span>Fee Receipts & Payment</span>
             <ArrowRight size={14} />
           </Link>
+        </div>
+      </div>
+
+      {/* Interactive Class Timetable Widget */}
+      <div className="glass-card" style={{ padding: '26px', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Calendar size={22} color="#4f46e5" />
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0, color: '#0f172a' }}>
+                Weekly Lecture Timetable
+              </h3>
+            </div>
+            <p style={{ color: '#64748b', fontSize: '0.84rem', margin: '4px 0 0 0' }}>
+              {studentProfile ? `${studentProfile.department} • Semester ${studentProfile.semester} (Sec ${studentProfile.section})` : 'Semester Academic Schedule'}
+            </p>
+          </div>
+
+          {/* Day selection tabs */}
+          <div style={{ display: 'flex', gap: '6px', background: '#f1f5f9', padding: '4px', borderRadius: '12px', flexWrap: 'wrap' }}>
+            {daysOfWeek.map((day) => {
+              const isToday = day === todayName;
+              const isSelected = day === activeDay;
+              return (
+                <button
+                  key={day}
+                  type="button"
+                  onClick={() => setActiveDay(day)}
+                  style={{
+                    padding: '8px 14px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontWeight: isSelected ? 700 : 500,
+                    fontSize: '0.82rem',
+                    background: isSelected ? '#4f46e5' : 'transparent',
+                    color: isSelected ? '#ffffff' : '#475569',
+                    transition: 'all 0.2s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  <span>{day}</span>
+                  {isToday && (
+                    <span style={{
+                      width: '6px',
+                      height: '6px',
+                      borderRadius: '50%',
+                      background: isSelected ? '#a5b4fc' : '#10b981',
+                      display: 'inline-block',
+                    }} />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Schedule grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
+          {WEEKDAY_SCHEDULE[activeDay]?.map((slot, idx) => {
+            const isBreak = slot.type === 'Break';
+            return (
+              <div
+                key={idx}
+                style={{
+                  padding: '16px',
+                  borderRadius: '14px',
+                  border: isBreak ? '1.5px dashed #cbd5e1' : '1.5px solid #e2e8f0',
+                  background: isBreak ? '#f8fafc' : '#ffffff',
+                  boxShadow: isBreak ? 'none' : '0 2px 8px rgba(0,0,0,0.04)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  gap: '10px',
+                }}
+              >
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '0.74rem', fontWeight: 700, color: '#4f46e5', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <Clock size={12} /> {slot.time}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: '0.7rem',
+                        fontWeight: 700,
+                        padding: '2px 8px',
+                        borderRadius: '6px',
+                        background: slot.type === 'Practical' ? '#ecfdf5' : slot.type === 'Seminar' ? '#fdf4ff' : '#eff6ff',
+                        color: slot.type === 'Practical' ? '#059669' : slot.type === 'Seminar' ? '#9333ea' : '#2563eb',
+                      }}
+                    >
+                      {slot.code}
+                    </span>
+                  </div>
+
+                  <div style={{ fontWeight: 800, fontSize: '0.92rem', color: isBreak ? '#64748b' : '#0f172a', lineHeight: 1.35 }}>
+                    {slot.subject}
+                  </div>
+                </div>
+
+                <div style={{ paddingTop: '8px', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.76rem', color: '#64748b' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <MapPin size={12} color="#94a3b8" /> {slot.room}
+                  </span>
+                  <span style={{ fontWeight: 600, color: '#334155' }}>
+                    {slot.faculty}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 

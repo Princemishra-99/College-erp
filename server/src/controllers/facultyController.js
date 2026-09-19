@@ -224,3 +224,31 @@ export const revokeFacultyAccess = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// ─── @desc  Delete faculty member and cascade cleanup ─────────────────────────
+// @route  DELETE /api/faculty/:id
+// @access Private (Admin only)
+export const deleteFaculty = async (req, res) => {
+  try {
+    const faculty = await Faculty.findById(req.params.id);
+    if (!faculty) {
+      return res.status(404).json({ success: false, message: 'Faculty not found' });
+    }
+
+    // Unassign subjects
+    await Subject.updateMany({ facultyId: faculty._id }, { $unset: { facultyId: 1 } });
+
+    // Delete user account
+    if (faculty.userId) {
+      await User.findByIdAndDelete(faculty.userId);
+    }
+
+    // Delete faculty record
+    await Faculty.findByIdAndDelete(req.params.id);
+
+    res.json({ success: true, message: 'Faculty member and associated credentials deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+

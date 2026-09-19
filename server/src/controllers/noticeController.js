@@ -23,7 +23,7 @@ export const getAllNotices = async (req, res) => {
 // @access  Private (Admin & Faculty)
 export const createNotice = async (req, res) => {
   try {
-    const { title, content, targetRole, category, isPinned } = req.body;
+    const { title, content, targetRole, category, isPinned, attachmentUrl } = req.body;
 
     const notice = await Notice.create({
       title,
@@ -31,6 +31,7 @@ export const createNotice = async (req, res) => {
       targetRole: targetRole || 'all',
       category: category || 'General',
       isPinned: isPinned || false,
+      attachmentUrl: attachmentUrl || '',
       postedBy: req.user._id,
     });
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
-import { Bell, Plus, Pin, Sparkles, Globe, Trash2, X, FileText, CheckCircle2 } from 'lucide-react';
+import { Bell, Plus, Pin, Sparkles, Globe, Trash2, X, FileText, CheckCircle2, ExternalLink } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const NoticesPage = () => {
@@ -21,6 +21,7 @@ export const NoticesPage = () => {
     category: 'General',
     targetRole: 'all',
     isPinned: false,
+    attachmentUrl: '',
   });
 
   const fetchNotices = async () => {
@@ -48,7 +49,7 @@ export const NoticesPage = () => {
       if (res.data.success) {
         toast.success('Notice published successfully');
         setIsAddModalOpen(false);
-        setFormData({ title: '', content: '', category: 'General', targetRole: 'all', isPinned: false });
+        setFormData({ title: '', content: '', category: 'General', targetRole: 'all', isPinned: false, attachmentUrl: '' });
         fetchNotices();
       }
     } catch (err) {
@@ -208,6 +209,37 @@ export const NoticesPage = () => {
                   {n.content}
                 </p>
 
+                {/* Official Circular Attachment Link */}
+                {n.attachmentUrl && (
+                  <div style={{ marginBottom: '16px' }}>
+                    <a
+                      href={n.attachmentUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '8px 14px',
+                        borderRadius: '8px',
+                        background: '#eff6ff',
+                        border: '1px solid #bfdbfe',
+                        color: '#1d4ed8',
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        textDecoration: 'none',
+                        transition: 'all 0.2s',
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = '#dbeafe'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = '#eff6ff'; }}
+                    >
+                      <FileText size={15} color="#2563eb" />
+                      <span>View Official Circular / Document</span>
+                      <ExternalLink size={13} />
+                    </a>
+                  </div>
+                )}
+
                 {/* AI Hindi Translation Section */}
                 {hasTranslation && (
                   <div
@@ -362,6 +394,17 @@ export const NoticesPage = () => {
                   placeholder="Enter detailed notice content..."
                   value={formData.content}
                   onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Attachment / Document URL (Optional)</label>
+                <input
+                  type="url"
+                  className="form-input"
+                  placeholder="https://example.com/circular.pdf or Google Drive link"
+                  value={formData.attachmentUrl}
+                  onChange={(e) => setFormData({ ...formData, attachmentUrl: e.target.value })}
                 />
               </div>
 

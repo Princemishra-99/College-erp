@@ -205,6 +205,7 @@ export const deleteStudent = async (req, res) => {
     await Attendance.deleteMany({ studentId: student._id });
     await Mark.deleteMany({ studentId: student._id });
     await Fee.deleteMany({ studentId: student._id });
+    await ProfileRequest.deleteMany({ studentId: student._id });
     await Student.findByIdAndDelete(req.params.id);
 
     res.json({ success: true, message: 'Student and related records deleted successfully' });

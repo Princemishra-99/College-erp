@@ -98,6 +98,11 @@ export const RegisterPage = () => {
       toast.error('Please fill all required fields first');
       return;
     }
+    const cleanPhone = formData.phone.trim().replace(/^(\+91|0)/, '');
+    if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+      toast.error('Please enter a valid 10-digit Indian mobile number (starting with 6, 7, 8, or 9)');
+      return;
+    }
     if (formData.password.length < 6) {
       toast.error('Password must be at least 6 characters');
       return;

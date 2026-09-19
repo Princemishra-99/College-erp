@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import api from '../../services/api';
-import { Award, Save, CheckCircle, HelpCircle } from 'lucide-react';
+import { Award, Save, CheckCircle, HelpCircle, Download, FileSpreadsheet, Sparkles, RotateCcw } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const UploadMarks = () => {
@@ -82,6 +82,48 @@ export const UploadMarks = () => {
     if (pct >= 50) return 'C';
     if (pct >= 40) return 'P';
     return 'F';
+  };
+
+  // ── Export Class Marks Roster as CSV (Real ERP Feature) ────────────────────
+  const downloadCSV = () => {
+    if (students.length === 0) {
+      toast.error('No student records to export');
+      return;
+    }
+    const currentSub = subjects.find((s) => s._id === selectedSubjectId);
+    const subName = currentSub ? currentSub.subjectCode : 'Course';
+    const csvRows = [
+      ['Enrollment No', 'Student Name', 'Department', 'Semester', 'Exam Type', 'Max Marks', 'Marks Obtained', 'Grade'],
+      ...students.map((s) => [
+        `"${s.enrollmentNo}"`,
+        `"${s.userId?.name || ''}"`,
+        `"${s.department}"`,
+        s.semester,
+        examType,
+        maxMarks,
+        marksData[s._id] !== undefined ? marksData[s._id] : 0,
+        getGrade(marksData[s._id] || 0, maxMarks),
+      ]),
+    ];
+    const csvContent = 'data:text/csv;charset=utf-8,' + csvRows.map((e) => e.join(',')).join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `${subName}_${examType}_Marks_Roster.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success('Marks CSV roster exported successfully!');
+  };
+
+  // ── Quick Bulk Score Presets ───────────────────────────────────────────────
+  const bulkSetMarks = (val) => {
+    const updated = {};
+    students.forEach((s) => {
+      updated[s._id] = Number(val);
+    });
+    setMarksData(updated);
+    toast.success(`Set all students to ${val} marks`);
   };
 
   const handleSubmit = async () => {
@@ -171,6 +213,47 @@ export const UploadMarks = () => {
             value={maxMarks}
             onChange={(e) => setMaxMarks(e.target.value)}
           />
+        </div>
+      </div>
+
+      {/* Roster Table Header & Bulk Controls */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontWeight: 800, fontSize: '1rem', color: '#0f172a' }}>
+            Enrolled Students ({students.length})
+          </span>
+          <span className="badge badge-info">Evaluation Grade Sheet</span>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <Sparkles size={13} color="#6366f1" /> Quick Presets:
+          </span>
+          <button
+            type="button"
+            onClick={() => bulkSetMarks(75)}
+            className="btn btn-secondary"
+            style={{ fontSize: '0.75rem', padding: '4px 10px' }}
+          >
+            All 75
+          </button>
+          <button
+            type="button"
+            onClick={() => bulkSetMarks(85)}
+            className="btn btn-secondary"
+            style={{ fontSize: '0.75rem', padding: '4px 10px' }}
+          >
+            All 85
+          </button>
+          <button
+            type="button"
+            onClick={downloadCSV}
+            className="btn btn-secondary"
+            style={{ fontSize: '0.78rem', padding: '6px 14px', background: '#f8fafc', borderColor: '#cbd5e1' }}
+          >
+            <Download size={14} color="#4f46e5" />
+            <span>Export CSV Roster</span>
+          </button>
         </div>
       </div>
 
